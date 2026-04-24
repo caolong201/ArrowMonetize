@@ -163,7 +163,7 @@ public class LevelManager : MonoBehaviour
         };
     }
     
-    public void LoadLevel(int level, bool updateCurrentLevel = true)
+    public void LoadLevel(int level, bool updateCurrentLevel = true, bool resetLives = true)
     {
         if (updateCurrentLevel)
         {
@@ -174,7 +174,7 @@ public class LevelManager : MonoBehaviour
         // Check if this is level 1
         if (level == 1 && boardManager != null)
         {
-            boardManager.InitializeLevel1Board();
+            boardManager.InitializeLevel1Board(resetLives);
             Debug.Log("Level 1 loaded: 2x2 board with 3 arrows in L-shape");
             return;
         }
@@ -182,7 +182,7 @@ public class LevelManager : MonoBehaviour
         // Check if this is level 2
         if (level == 2 && boardManager != null)
         {
-            boardManager.InitializeLevel2Board();
+            boardManager.InitializeLevel2Board(resetLives);
             Debug.Log("Level 2 loaded: 2x2 board with 3 arrows custom layout");
             return;
         }
@@ -190,7 +190,7 @@ public class LevelManager : MonoBehaviour
         // Check if this is level 3
         if (level == 3 && boardManager != null)
         {
-            boardManager.InitializeLevel3Board();
+            boardManager.InitializeLevel3Board(resetLives);
             Debug.Log("Level 3 loaded: 2x2 board with 3 arrows custom layout");
             return;
         }
@@ -198,7 +198,7 @@ public class LevelManager : MonoBehaviour
         // Check if this is level 4
         if (level == 4 && boardManager != null)
         {
-            boardManager.InitializeLevel4Board();
+            boardManager.InitializeLevel4Board(resetLives);
             Debug.Log("Level 4 loaded: 2x2 board with 4 arrows custom layout");
             return;
         }
@@ -212,11 +212,11 @@ public class LevelManager : MonoBehaviour
                 // Use difficulty settings if available, otherwise use basic settings
                 if (data.difficultySettings != null)
                 {
-                    boardManager.InitializeBoard(data.difficultySettings);
+                    boardManager.InitializeBoard(data.difficultySettings, resetLives);
                 }
                 else
                 {
-                    boardManager.InitializeBoard(data.boardWidth, data.boardHeight);
+                    boardManager.InitializeBoard(data.boardWidth, data.boardHeight, resetLives);
                 }
             }
             
@@ -227,7 +227,7 @@ public class LevelManager : MonoBehaviour
             // Use default size
             if (boardManager != null)
             {
-                boardManager.InitializeBoard(defaultWidth, defaultHeight);
+                boardManager.InitializeBoard(defaultWidth, defaultHeight, resetLives);
             }
             
             Debug.Log($"Level {level} loaded with default size: {defaultWidth}x{defaultHeight}");

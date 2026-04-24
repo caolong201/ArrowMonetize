@@ -38,6 +38,14 @@ public class LivesManager : MonoBehaviour
         }
     }
     
+    /// <summary>Used e.g. after rewarded ad. Clamped to maxLives.</summary>
+    public void AddLife(int amount = 1)
+    {
+        if (amount <= 0) return;
+        currentLives = Mathf.Min(maxLives, currentLives + amount);
+        OnLivesChanged?.Invoke(currentLives);
+    }
+    
     public int GetCurrentLives()
     {
         return currentLives;

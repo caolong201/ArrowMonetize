@@ -215,7 +215,7 @@ public class BoardManager : MonoBehaviour
         }
     }
     
-    public void InitializeBoard(int width, int height)
+    public void InitializeBoard(int width, int height, bool resetLives = true)
     {
         DifficultySettings settings = new DifficultySettings
         {
@@ -225,10 +225,10 @@ public class BoardManager : MonoBehaviour
             obstacleDensity = 0.3f,
             arrowsPointingToCenter = 0.2f
         };
-        InitializeBoard(settings);
+        InitializeBoard(settings, resetLives);
     }
     
-    public void InitializeBoard(DifficultySettings settings)
+    public void InitializeBoard(DifficultySettings settings, bool resetLives = true)
     {
         // Store settings for reload
         currentDifficultySettings = settings;
@@ -237,7 +237,7 @@ public class BoardManager : MonoBehaviour
         boardHeight = settings.boardHeight;
         
         // Reset lives when starting new level
-        if (livesManager != null)
+        if (resetLives && livesManager != null)
         {
             livesManager.ResetLives();
         }
@@ -309,14 +309,14 @@ public class BoardManager : MonoBehaviour
         }
     }
     
-    public void InitializeLevel1Board()
+    public void InitializeLevel1Board(bool resetLives = true)
     {
         // Level 1 board: 2x2 grid with only 3 arrows in L-shape
         boardWidth = 2;
         boardHeight = 2;
         
         // Reset lives when starting level
-        if (livesManager != null)
+        if (resetLives && livesManager != null)
         {
             livesManager.ResetLives();
         }
@@ -366,14 +366,14 @@ public class BoardManager : MonoBehaviour
         AnimateBoardSpawn(createdArrows, specialX, specialY);
     }
     
-    public void InitializeLevel2Board()
+    public void InitializeLevel2Board(bool resetLives = true)
     {
         // Level 2 board: 2x2 grid with only 3 arrows
         boardWidth = 2;
         boardHeight = 2;
         
         // Reset lives when starting level
-        if (livesManager != null)
+        if (resetLives && livesManager != null)
         {
             livesManager.ResetLives();
         }
@@ -424,14 +424,14 @@ public class BoardManager : MonoBehaviour
         AnimateBoardSpawn(createdArrows, specialX, specialY);
     }
 
-    public void InitializeLevel3Board()
+    public void InitializeLevel3Board(bool resetLives = true)
     {
         // Level 3 board: 2x2 grid with 3 arrows
         boardWidth = 2;
         boardHeight = 2;
         
         // Reset lives when starting level
-        if (livesManager != null)
+        if (resetLives && livesManager != null)
         {
             livesManager.ResetLives();
         }
@@ -482,14 +482,14 @@ public class BoardManager : MonoBehaviour
         AnimateBoardSpawn(createdArrows, specialX, specialY);
     }
     
-    public void InitializeLevel4Board()
+    public void InitializeLevel4Board(bool resetLives = true)
     {
         // Level 4 board: 3x3 grid as shown in reference image
         boardWidth = 3;
         boardHeight = 3;
         
         // Reset lives when starting level
-        if (livesManager != null)
+        if (resetLives && livesManager != null)
         {
             livesManager.ResetLives();
         }
