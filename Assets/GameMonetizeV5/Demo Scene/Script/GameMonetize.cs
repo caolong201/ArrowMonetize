@@ -86,17 +86,17 @@ public class GameMonetize : MonoBehaviour
     /// <summary>
     /// Resume the game, this method is used when an ad has been showed
     /// </summary>
-    void ResumeGame()
+    public void ResumeGame()
     {
-       if (OnResumeGame != null) OnResumeGame();
+        OnResumeGame?.Invoke();
     }
 
     /// <summary>
     /// Pause the game, this method is used when we show an ad
     /// </summary>
-    void PauseGame()
+    public void PauseGame()
     {
-        if(OnPauseGame != null) OnPauseGame();
+        OnPauseGame?.Invoke();
     }
 #endif
 }

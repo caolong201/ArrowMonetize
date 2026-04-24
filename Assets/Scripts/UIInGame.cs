@@ -12,7 +12,18 @@ public class UIInGame : MonoBehaviour
     public Button shuffleButton;
     public Button reloadButton;
     public Button backButton;
+    public Button btnSetting;
     public TextMeshProUGUI noMovableArrowText;
+
+    [Header("Settings Popup")]
+    public GameObject settingPopup;
+    public Button settingCloseButton;
+    public Button buttonBgm;
+    public Image bgmOnImage;
+    public Image bgmOffImage;
+    public Button buttonSfx;
+    public Image sfxOnImage;
+    public Image sfxOffImage;
     
     [Header("Lives UI")]
     public GameObject livesPanel;
@@ -98,6 +109,26 @@ public class UIInGame : MonoBehaviour
         {
             backButton.onClick.AddListener(OnBackClicked);
         }
+        
+        if (btnSetting != null)
+        {
+            btnSetting.onClick.AddListener(OnSettingClicked);
+        }
+
+        if (settingCloseButton != null)
+        {
+            settingCloseButton.onClick.AddListener(OnSettingCloseClicked);
+        }
+
+        if (buttonBgm != null)
+        {
+            buttonBgm.onClick.AddListener(OnToggleBgmClicked);
+        }
+
+        if (buttonSfx != null)
+        {
+            buttonSfx.onClick.AddListener(OnToggleSfxClicked);
+        }
 
         if (btnSliderAds != null)
         {
@@ -109,6 +140,12 @@ public class UIInGame : MonoBehaviour
         {
             timePopup.SetActive(false);
         }
+        
+        if (settingPopup != null)
+        {
+            settingPopup.SetActive(false);
+        }
+        RefreshSettingPopupVisual();
 
         if (timePopupCloseButton != null)
         {
@@ -198,6 +235,26 @@ public class UIInGame : MonoBehaviour
             btnSliderAds.onClick.RemoveListener(OnBtnSliderAdsClicked);
             btnSliderAds.transform.DOKill();
         }
+        
+        if (btnSetting != null)
+        {
+            btnSetting.onClick.RemoveListener(OnSettingClicked);
+        }
+
+        if (settingCloseButton != null)
+        {
+            settingCloseButton.onClick.RemoveListener(OnSettingCloseClicked);
+        }
+
+        if (buttonBgm != null)
+        {
+            buttonBgm.onClick.RemoveListener(OnToggleBgmClicked);
+        }
+
+        if (buttonSfx != null)
+        {
+            buttonSfx.onClick.RemoveListener(OnToggleSfxClicked);
+        }
 
         if (timePopupCloseButton != null)
         {
@@ -280,6 +337,7 @@ public class UIInGame : MonoBehaviour
     
     void OnHintClicked()
     {
+        PlayClickSound();
         if (boardManager != null)
         {
             boardManager.ShowHint();
@@ -288,6 +346,7 @@ public class UIInGame : MonoBehaviour
     
     void OnShuffleClicked()
     {
+        PlayClickSound();
         if (boardManager != null)
         {
             boardManager.ShuffleBoard();
@@ -296,6 +355,7 @@ public class UIInGame : MonoBehaviour
     
     void OnReloadClicked()
     {
+        PlayClickSound();
         if (boardManager != null)
         {
             boardManager.ReloadBoard();
@@ -338,6 +398,7 @@ public class UIInGame : MonoBehaviour
     
     void OnBackClicked()
     {
+        PlayClickSound();
         // Clear board before going back to home
         if (boardManager != null)
         {
@@ -579,6 +640,7 @@ public class UIInGame : MonoBehaviour
 
     void OnBtnSliderAdsClicked()
     {
+        PlayClickSound();
         isTimerPaused = true;
         if (timePopup != null)
         {
@@ -588,6 +650,7 @@ public class UIInGame : MonoBehaviour
 
     void OnTimePopupCloseClicked()
     {
+        PlayClickSound();
         if (timePopup != null)
         {
             timePopup.SetActive(false);
@@ -598,6 +661,7 @@ public class UIInGame : MonoBehaviour
 
     void OnAdsTimeClicked()
     {
+        PlayClickSound();
 #if UNITY_WEBGL || UNITY_EDITOR
         if (waitingTimerAdReward)
             return;
@@ -616,6 +680,69 @@ public class UIInGame : MonoBehaviour
 #endif
     }
 
+    void OnSettingClicked()
+    {
+        PlayClickSound();
+        SetSettingPopupVisible(true);
+    }
+
+    void OnSettingCloseClicked()
+    {
+        PlayClickSound();
+        SetSettingPopupVisible(false);
+    }
+
+    void OnToggleBgmClicked()
+    {
+        PlayClickSound();
+        if (AudioManager.Instance == null) return;
+        
+        AudioManager.Instance.SetBgmEnabled(!AudioManager.Instance.IsBgmEnabled);
+        RefreshSettingPopupVisual();
+    }
+
+    void OnToggleSfxClicked()
+    {
+        PlayClickSound();
+        if (AudioManager.Instance == null) return;
+        
+        AudioManager.Instance.SetSfxEnabled(!AudioManager.Instance.IsSfxEnabled);
+        RefreshSettingPopupVisual();
+    }
+
+    void SetSettingPopupVisible(bool isVisible)
+    {
+        if (settingPopup != null)
+        {
+            settingPopup.SetActive(isVisible);
+        }
+
+        if (isVisible)
+        {
+            RefreshSettingPopupVisual();
+        }
+    }
+
+    void RefreshSettingPopupVisual()
+    {
+        bool bgmEnabled = AudioManager.Instance == null || AudioManager.Instance.IsBgmEnabled;
+        bool sfxEnabled = AudioManager.Instance == null || AudioManager.Instance.IsSfxEnabled;
+
+        if (bgmOnImage != null) bgmOnImage.gameObject.SetActive(bgmEnabled);
+        if (bgmOffImage != null) bgmOffImage.gameObject.SetActive(!bgmEnabled);
+
+        if (sfxOnImage != null) sfxOnImage.gameObject.SetActive(sfxEnabled);
+        if (sfxOffImage != null) sfxOffImage.gameObject.SetActive(!sfxEnabled);
+    }
+
+    void PlayClickSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayClick();
+        }
+    }
+
 #if UNITY_WEBGL || UNITY_EDITOR
     void OnAdsTimeResume()
     {
@@ -630,6 +757,11 @@ public class UIInGame : MonoBehaviour
         if (timePopup != null)
         {
             timePopup.SetActive(false);
+        }
+        
+        if (settingPopup != null)
+        {
+            settingPopup.SetActive(false);
         }
 
         isTimerPaused = false;
