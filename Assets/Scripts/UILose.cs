@@ -9,6 +9,8 @@ public class UILose : MonoBehaviour
 {
     [Header("UI References")]
     public TextMeshProUGUI loseText;
+    [Tooltip("Shown after lose message animation finishes (e.g. Retry / Home panel).")]
+    public GameObject losePopup;
     
     [Header("Animation Settings")]
     public float fadeDuration = 0.3f;
@@ -60,9 +62,13 @@ public class UILose : MonoBehaviour
         return loseMessages[Random.Range(0, loseMessages.Count)];
     }
     
-    void AnimateLoseText()
+    void AnimateLoseText(System.Action onComplete = null)
     {
-        if (loseText == null) return;
+        if (loseText == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
         
         // Kill any existing tweens
         loseText.transform.DOKill();
@@ -97,6 +103,15 @@ public class UILose : MonoBehaviour
         // 6. Scale back to normal
         textSequence.Append(loseText.transform.DOScale(Vector3.one, 0.15f)
             .SetEase(Ease.OutQuad));
+        
+        if (onComplete != null)
+            textSequence.OnComplete(() => onComplete.Invoke());
+    }
+    
+    void ShowLosePopup()
+    {
+        if (losePopup != null)
+            losePopup.SetActive(true);
     }
     
     public void Show()
@@ -107,12 +122,21 @@ public class UILose : MonoBehaviour
         if (autoHideCoroutine != null)
         {
             StopCoroutine(autoHideCoroutine);
+            autoHideCoroutine = null;
         }
+        
+        if (losePopup != null)
+            losePopup.SetActive(false);
         
         // Set random lose message
         if (loseText != null)
         {
             loseText.text = GetRandomLoseMessage();
+        }
+        
+        void AfterMessageIntro()
+        {
+            AnimateLoseText(ShowLosePopup);
         }
         
         if (canvasGroup != null)
@@ -131,18 +155,18 @@ public class UILose : MonoBehaviour
                     canvasGroup.interactable = true;
                     canvasGroup.blocksRaycasts = true;
                     
-                    // Animate lose text after fade in
-                    AnimateLoseText();
+                    // Animate lose text after fade in, then show lose popup
+                    AfterMessageIntro();
                 });
         }
         else
         {
-            // Animate lose text immediately if no canvas group
-            AnimateLoseText();
+            AfterMessageIntro();
         }
         
-        // Start auto-hide coroutine
-        autoHideCoroutine = StartCoroutine(AutoHideAfterDelay());
+        // Auto-return home only when there is no lose popup (popup should own exit flow)
+        if (losePopup == null)
+            autoHideCoroutine = StartCoroutine(AutoHideAfterDelay());
     }
     
     IEnumerator AutoHideAfterDelay()
@@ -160,6 +184,9 @@ public class UILose : MonoBehaviour
     
     public void Hide()
     {
+        if (losePopup != null)
+            losePopup.SetActive(false);
+        
         if (canvasGroup != null)
         {
             // Kill any existing tweens

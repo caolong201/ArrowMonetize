@@ -1413,7 +1413,7 @@ GameObject:
   - component: {fileID: 397283269}
   - component: {fileID: 397283268}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Tile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1433,10 +1433,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1390414257}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 296}
-  m_SizeDelta: {x: 900, y: 176.8098}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -110}
+  m_SizeDelta: {x: 600, y: 220}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397283268
 MonoBehaviour:
@@ -2479,7 +2479,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &792962184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2493,6 +2493,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loseText: {fileID: 1848099038}
+  losePopup: {fileID: 944553445}
   fadeDuration: 0.3
   autoHideDelay: 3
   loseMessages:
@@ -2730,7 +2731,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &944553446
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4104,7 +4105,7 @@ GameObject:
   - component: {fileID: 1390414259}
   - component: {fileID: 1390414258}
   m_Layer: 5
-  m_Name: Image
+  m_Name: lose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
