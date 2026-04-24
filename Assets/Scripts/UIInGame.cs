@@ -17,6 +17,16 @@ public class UIInGame : MonoBehaviour
     [Header("Lives UI")]
     public GameObject livesPanel;
     public Image[] lifeImages = new Image[3]; // 3 images for 3 lives
+
+    [Header("Level Timer UI")]
+    public Slider timerSlider;
+    public TextMeshProUGUI timerText;
+    public Button btnSliderAds;
+    public float levelDurationSeconds = 60f;
+    public float adsButtonRevealRemainingSeconds = 15f;
+    public GameObject timePopup;
+    public Button timePopupCloseButton;
+    public Button adsTimeButton;
     
     [Header("Tutorial UI")]
     public GameObject tutorialPanel; // Panel containing tutorial elements
@@ -36,7 +46,16 @@ public class UIInGame : MonoBehaviour
     private LevelManager levelManager;
     private CanvasGroup canvasGroup;
     private bool isTutorialActive = false;
+    private bool hasTimeUpTriggeredLose = false;
     private Coroutine handAnimationCoroutine;
+    private Coroutine levelTimerCoroutine;
+    private Coroutine hideMessageCoroutine;
+    private Tween adsButtonShakeTween;
+    private bool isTimerPaused = false;
+    private float remainingLevelTime = 0f;
+#if UNITY_WEBGL || UNITY_EDITOR
+    private bool waitingTimerAdReward = false;
+#endif
     
     // Tutorial step system (configured per level)
     private int currentTutorialStep = 0;
@@ -78,6 +97,27 @@ public class UIInGame : MonoBehaviour
         if (backButton != null)
         {
             backButton.onClick.AddListener(OnBackClicked);
+        }
+
+        if (btnSliderAds != null)
+        {
+            btnSliderAds.gameObject.SetActive(false);
+            btnSliderAds.onClick.AddListener(OnBtnSliderAdsClicked);
+        }
+
+        if (timePopup != null)
+        {
+            timePopup.SetActive(false);
+        }
+
+        if (timePopupCloseButton != null)
+        {
+            timePopupCloseButton.onClick.AddListener(OnTimePopupCloseClicked);
+        }
+
+        if (adsTimeButton != null)
+        {
+            adsTimeButton.onClick.AddListener(OnAdsTimeClicked);
         }
         
         // Hide message text initially
@@ -137,6 +177,45 @@ public class UIInGame : MonoBehaviour
             handImage.DOKill();
             handImage.transform.DOKill();
         }
+
+        if (levelTimerCoroutine != null)
+        {
+            StopCoroutine(levelTimerCoroutine);
+        }
+
+        if (hideMessageCoroutine != null)
+        {
+            StopCoroutine(hideMessageCoroutine);
+        }
+
+        if (adsButtonShakeTween != null && adsButtonShakeTween.IsActive())
+        {
+            adsButtonShakeTween.Kill();
+        }
+
+        if (btnSliderAds != null)
+        {
+            btnSliderAds.onClick.RemoveListener(OnBtnSliderAdsClicked);
+            btnSliderAds.transform.DOKill();
+        }
+
+        if (timePopupCloseButton != null)
+        {
+            timePopupCloseButton.onClick.RemoveListener(OnTimePopupCloseClicked);
+        }
+
+        if (adsTimeButton != null)
+        {
+            adsTimeButton.onClick.RemoveListener(OnAdsTimeClicked);
+        }
+
+#if UNITY_WEBGL || UNITY_EDITOR
+        if (waitingTimerAdReward)
+        {
+            GameMonetize.OnResumeGame -= OnAdsTimeResume;
+            waitingTimerAdReward = false;
+        }
+#endif
         
         // Clean up life images tweens
         if (lifeImages != null)
@@ -374,7 +453,188 @@ public class UIInGame : MonoBehaviour
                     canvasGroup.blocksRaycasts = true;
                 });
         }
+
+        StartLevelTimer();
     }
+
+    void StartLevelTimer()
+    {
+        hasTimeUpTriggeredLose = false;
+        isTimerPaused = false;
+        remainingLevelTime = Mathf.Max(1f, levelDurationSeconds);
+
+        if (levelTimerCoroutine != null)
+        {
+            StopCoroutine(levelTimerCoroutine);
+        }
+
+        if (adsButtonShakeTween != null && adsButtonShakeTween.IsActive())
+        {
+            adsButtonShakeTween.Kill();
+        }
+
+        HideAdsSliderButton();
+
+        if (timePopup != null)
+        {
+            timePopup.SetActive(false);
+        }
+
+        UpdateTimerUI(0f, Mathf.CeilToInt(remainingLevelTime));
+        levelTimerCoroutine = StartCoroutine(LevelTimerCountdown());
+    }
+
+    IEnumerator LevelTimerCountdown()
+    {
+        float duration = Mathf.Max(1f, levelDurationSeconds);
+        bool adsButtonShown = false;
+        float revealAt = Mathf.Clamp(adsButtonRevealRemainingSeconds, 0f, duration);
+
+        while (remainingLevelTime > 0f)
+        {
+            if (!isTimerPaused)
+            {
+                remainingLevelTime = Mathf.Max(0f, remainingLevelTime - Time.deltaTime);
+            }
+
+            float normalizedValue = (duration - remainingLevelTime) / duration;
+            UpdateTimerUI(normalizedValue, Mathf.CeilToInt(remainingLevelTime));
+
+            if (!adsButtonShown && remainingLevelTime <= revealAt)
+            {
+                adsButtonShown = true;
+                ShowAdsSliderButton();
+            }
+
+            yield return null;
+        }
+
+        UpdateTimerUI(1f, 0);
+        levelTimerCoroutine = null;
+
+        if (!hasTimeUpTriggeredLose && gameObject.activeInHierarchy && uiManager != null)
+        {
+            hasTimeUpTriggeredLose = true;
+            if (boardManager != null)
+            {
+                boardManager.TriggerLoseSequence();
+            }
+            else
+            {
+                uiManager.ShowLose();
+            }
+        }
+    }
+
+    void UpdateTimerUI(float sliderValue, int remainingSeconds)
+    {
+        if (timerSlider != null)
+        {
+            timerSlider.minValue = 0f;
+            timerSlider.maxValue = 1f;
+            timerSlider.value = Mathf.Clamp01(sliderValue);
+        }
+
+        if (timerText != null)
+        {
+            int minutes = remainingSeconds / 60;
+            int seconds = remainingSeconds % 60;
+            timerText.text = $"{minutes:00}:{seconds:00}";
+        }
+    }
+
+    void ShowAdsSliderButton()
+    {
+        if (btnSliderAds == null)
+        {
+            return;
+        }
+
+        btnSliderAds.gameObject.SetActive(true);
+
+        btnSliderAds.transform.DOKill();
+        btnSliderAds.transform.localScale = Vector3.one;
+        btnSliderAds.transform.localRotation = Quaternion.identity;
+
+        adsButtonShakeTween = btnSliderAds.transform
+            .DOShakeRotation(0.7f, new Vector3(0f, 0f, 12f), 12, 90f, false)
+            .SetLoops(-1, LoopType.Restart);
+    }
+
+    void HideAdsSliderButton()
+    {
+        if (adsButtonShakeTween != null && adsButtonShakeTween.IsActive())
+        {
+            adsButtonShakeTween.Kill();
+        }
+
+        if (btnSliderAds != null)
+        {
+            btnSliderAds.transform.DOKill();
+            btnSliderAds.transform.localScale = Vector3.one;
+            btnSliderAds.transform.localRotation = Quaternion.identity;
+            btnSliderAds.gameObject.SetActive(false);
+        }
+    }
+
+    void OnBtnSliderAdsClicked()
+    {
+        isTimerPaused = true;
+        if (timePopup != null)
+        {
+            timePopup.SetActive(true);
+        }
+    }
+
+    void OnTimePopupCloseClicked()
+    {
+        if (timePopup != null)
+        {
+            timePopup.SetActive(false);
+        }
+
+        isTimerPaused = false;
+    }
+
+    void OnAdsTimeClicked()
+    {
+#if UNITY_WEBGL || UNITY_EDITOR
+        if (waitingTimerAdReward)
+            return;
+
+        if (GameMonetize.Instance == null)
+        {
+            Debug.LogWarning("GameMonetize.Instance is missing; cannot show ad.");
+            return;
+        }
+
+        waitingTimerAdReward = true;
+        GameMonetize.OnResumeGame += OnAdsTimeResume;
+        GameMonetize.Instance.ShowAd();
+#else
+        Debug.LogWarning("Reward ads are only integrated for WebGL / Editor in this project.");
+#endif
+    }
+
+#if UNITY_WEBGL || UNITY_EDITOR
+    void OnAdsTimeResume()
+    {
+        GameMonetize.OnResumeGame -= OnAdsTimeResume;
+        waitingTimerAdReward = false;
+
+        remainingLevelTime = Mathf.Max(1f, levelDurationSeconds);
+        UpdateTimerUI(0f, Mathf.CeilToInt(remainingLevelTime));
+
+        HideAdsSliderButton();
+
+        if (timePopup != null)
+        {
+            timePopup.SetActive(false);
+        }
+
+        isTimerPaused = false;
+    }
+#endif
     
     void ShowTutorial()
     {
@@ -872,6 +1132,32 @@ public class UIInGame : MonoBehaviour
     
     public void Hide()
     {
+        hasTimeUpTriggeredLose = false;
+
+        if (levelTimerCoroutine != null)
+        {
+            StopCoroutine(levelTimerCoroutine);
+            levelTimerCoroutine = null;
+        }
+
+        if (adsButtonShakeTween != null && adsButtonShakeTween.IsActive())
+        {
+            adsButtonShakeTween.Kill();
+        }
+
+        if (btnSliderAds != null)
+        {
+            btnSliderAds.transform.DOKill();
+            btnSliderAds.gameObject.SetActive(false);
+        }
+
+        if (timePopup != null)
+        {
+            timePopup.SetActive(false);
+        }
+
+        isTimerPaused = false;
+
         if (canvasGroup != null)
         {
             // Kill any existing tweens
@@ -897,8 +1183,12 @@ public class UIInGame : MonoBehaviour
     {
         if (noMovableArrowText == null) return;
         
-        // Stop any existing coroutine
-        StopAllCoroutines();
+        // Stop existing message coroutine only (do not stop timer/tutorial coroutines)
+        if (hideMessageCoroutine != null)
+        {
+            StopCoroutine(hideMessageCoroutine);
+            hideMessageCoroutine = null;
+        }
         
         // Kill any existing tweens on text
         noMovableArrowText.DOKill();
@@ -914,7 +1204,7 @@ public class UIInGame : MonoBehaviour
             .SetEase(DG.Tweening.Ease.OutQuad);
         
         // Start coroutine to hide message and shuffle after delay
-        StartCoroutine(HideMessageAndShuffle());
+        hideMessageCoroutine = StartCoroutine(HideMessageAndShuffle());
     }
     
     IEnumerator HideMessageAndShuffle()
@@ -940,6 +1230,8 @@ public class UIInGame : MonoBehaviour
         {
             boardManager.ShuffleBoard();
         }
+
+        hideMessageCoroutine = null;
     }
     
 }

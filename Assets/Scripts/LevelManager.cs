@@ -19,6 +19,7 @@ public class LevelData
 public class LevelManager : MonoBehaviour
 {
     private const string CURRENT_LEVEL_KEY = "CurrentLevel";
+    private const int MAX_BOARD_HEIGHT = 10;
     
     [Header("Level Settings")]
     public int currentLevel = 1;
@@ -116,11 +117,11 @@ public class LevelManager : MonoBehaviour
             { 
                 levelNumber = 3, 
                 boardWidth = 9, 
-                boardHeight = 11,
+                boardHeight = 10,
                 difficultySettings = new DifficultySettings
                 {
                     boardWidth = 9,
-                    boardHeight = 11,
+                    boardHeight = 10,
                     guaranteedPaths = 1,
                     pathComplexity = 0.5f,
                     obstacleDensity = 0.4f,
@@ -132,11 +133,11 @@ public class LevelManager : MonoBehaviour
             { 
                 levelNumber = 4, 
                 boardWidth = 10, 
-                boardHeight = 12,
+                boardHeight = 10,
                 difficultySettings = new DifficultySettings
                 {
                     boardWidth = 10,
-                    boardHeight = 12,
+                    boardHeight = 10,
                     guaranteedPaths = 1,
                     pathComplexity = 0.6f,
                     obstacleDensity = 0.5f,
@@ -148,11 +149,11 @@ public class LevelManager : MonoBehaviour
             { 
                 levelNumber = 5, 
                 boardWidth = 11, 
-                boardHeight = 13,
+                boardHeight = 10,
                 difficultySettings = new DifficultySettings
                 {
                     boardWidth = 11,
-                    boardHeight = 13,
+                    boardHeight = 10,
                     guaranteedPaths = 1,
                     pathComplexity = 0.7f,
                     obstacleDensity = 0.6f,
@@ -258,7 +259,7 @@ public class LevelManager : MonoBehaviour
         newData.difficultySettings = new DifficultySettings
         {
             boardWidth = defaultWidth + difficultyLevel,
-            boardHeight = defaultHeight + difficultyLevel,
+            boardHeight = Mathf.Min(MAX_BOARD_HEIGHT, defaultHeight + difficultyLevel),
             guaranteedPaths = Mathf.Max(0, 2 - difficultyLevel),
             obstacleDensity = Mathf.Min(0.7f, 0.2f + difficultyLevel * 0.1f),
             arrowsPointingToCenter = Mathf.Min(0.6f, 0.1f + difficultyLevel * 0.1f)

@@ -96,6 +96,11 @@ public class BoardManager : MonoBehaviour
         StartCoroutine(DelayedShowLose());
     }
     
+    public void TriggerLoseSequence()
+    {
+        OnAllLivesDepleted();
+    }
+    
     void AnimateArrowsFalling()
     {
         if (board == null) return;
