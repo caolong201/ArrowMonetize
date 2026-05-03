@@ -60,6 +60,10 @@ public class BoardManager : MonoBehaviour
     
     // Track arrows that have already lost a life (to prevent multiple life loss for same arrow)
     private HashSet<ArrowCell> arrowsThatLostLife = new HashSet<ArrowCell>();
+
+#if UNITY_WEBGL || UNITY_EDITOR
+    bool waitingLoseInterstitial;
+#endif
     
     void Awake()
     {
@@ -83,16 +87,52 @@ public class BoardManager : MonoBehaviour
         {
             livesManager.OnLivesDepleted -= OnAllLivesDepleted;
         }
+#if UNITY_WEBGL || UNITY_EDITOR
+        if (waitingLoseInterstitial)
+        {
+            GameMonetize.OnResumeGame -= OnLoseInterstitialResumed;
+            waitingLoseInterstitial = false;
+        }
+#endif
     }
     
     void OnAllLivesDepleted()
     {
         Debug.Log("All lives depleted! Animating arrows falling...");
-        
-        // Animate all arrows falling down
+
+#if UNITY_WEBGL || UNITY_EDITOR
+        if (GameMonetize.Instance != null)
+        {
+            if (waitingLoseInterstitial)
+            {
+                return;
+            }
+            waitingLoseInterstitial = true;
+            GameMonetize.OnResumeGame += OnLoseInterstitialResumed;
+            GameMonetize.Instance.ShowAd();
+            return;
+        }
+#endif
+        RunLoseSequenceCore();
+    }
+
+#if UNITY_WEBGL || UNITY_EDITOR
+    void OnLoseInterstitialResumed()
+    {
+        GameMonetize.OnResumeGame -= OnLoseInterstitialResumed;
+        waitingLoseInterstitial = false;
+        RunLoseSequenceCore();
+    }
+#endif
+
+    void RunLoseSequenceCore()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayLose();
+        }
+
         AnimateArrowsFalling();
-        
-        // Show lose screen after a delay
         StartCoroutine(DelayedShowLose());
     }
     

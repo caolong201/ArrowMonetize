@@ -66,6 +66,7 @@ public class UIInGame : MonoBehaviour
     private float remainingLevelTime = 0f;
 #if UNITY_WEBGL || UNITY_EDITOR
     private bool waitingTimerAdReward = false;
+    private bool waitingLoseInterstitialNoBoard;
 #endif
     
     // Tutorial step system (configured per level)
@@ -271,6 +272,11 @@ public class UIInGame : MonoBehaviour
         {
             GameMonetize.OnResumeGame -= OnAdsTimeResume;
             waitingTimerAdReward = false;
+        }
+        if (waitingLoseInterstitialNoBoard)
+        {
+            GameMonetize.OnResumeGame -= OnLoseInterstitialResumedNoBoard;
+            waitingLoseInterstitialNoBoard = false;
         }
 #endif
         
@@ -582,7 +588,26 @@ public class UIInGame : MonoBehaviour
             }
             else
             {
+#if UNITY_WEBGL || UNITY_EDITOR
+                if (GameMonetize.Instance != null)
+                {
+                    if (waitingLoseInterstitialNoBoard)
+                    {
+                        yield break;
+                    }
+                    waitingLoseInterstitialNoBoard = true;
+                    GameMonetize.OnResumeGame += OnLoseInterstitialResumedNoBoard;
+                    GameMonetize.Instance.ShowAd();
+                }
+                else
+                {
+                    PlayLoseSound();
+                    uiManager.ShowLose();
+                }
+#else
+                PlayLoseSound();
                 uiManager.ShowLose();
+#endif
             }
         }
     }
@@ -743,7 +768,24 @@ public class UIInGame : MonoBehaviour
         }
     }
 
+    void PlayLoseSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayLose();
+        }
+    }
+
 #if UNITY_WEBGL || UNITY_EDITOR
+    void OnLoseInterstitialResumedNoBoard()
+    {
+        GameMonetize.OnResumeGame -= OnLoseInterstitialResumedNoBoard;
+        waitingLoseInterstitialNoBoard = false;
+        if (uiManager == null) return;
+        PlayLoseSound();
+        uiManager.ShowLose();
+    }
+
     void OnAdsTimeResume()
     {
         GameMonetize.OnResumeGame -= OnAdsTimeResume;

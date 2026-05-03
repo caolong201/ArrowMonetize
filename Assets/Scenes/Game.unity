@@ -629,6 +629,7 @@ MonoBehaviour:
   bgmSource: {fileID: 88378346}
   sfxSource: {fileID: 88378348}
   clickClip: {fileID: 8300000, guid: 414870add434489449497cdf97eb3dab, type: 3}
+  loseClip: {fileID: 8300000, guid: 742dceadc64aff74da704687e20eb6e3, type: 3}
 --- !u!82 &88378348
 AudioSource:
   m_ObjectHideFlags: 0

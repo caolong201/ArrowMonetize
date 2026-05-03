@@ -13,6 +13,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("Audio Clips")]
     [SerializeField] AudioClip clickClip;
+    [SerializeField] AudioClip loseClip;
 
     public bool IsBgmEnabled { get; private set; } = true;
     public bool IsSfxEnabled { get; private set; } = true;
@@ -62,6 +63,12 @@ public class AudioManager : MonoBehaviour
     {
         if (!IsSfxEnabled || sfxSource == null || clickClip == null) return;
         sfxSource.PlayOneShot(clickClip);
+    }
+
+    public void PlayLose()
+    {
+        if (!IsSfxEnabled || sfxSource == null || loseClip == null) return;
+        sfxSource.PlayOneShot(loseClip);
     }
 
     void ApplyAudioState()
